@@ -16,6 +16,14 @@ const OrderContextProvider = ({ children }) => {
     DataStore.query(Order, (o) => o.userID.eq(dbUser.id)).then(setOrders);
   });
 
+  const getOrder = async (id) => {
+    const order = await DataStore.query(Order, id);
+    const orderProducts = await DataStore.query(OrderProduct, (op) =>
+      op.orderID.eq(id)
+    );
+    return { ...order, products: orderProducts };
+  };
+
   // const createOrder = async () => {
   //   // create the order
   //   const newOrder = await DataStore.save(
@@ -43,7 +51,9 @@ const OrderContextProvider = ({ children }) => {
   // };
 
   return (
-    <OrderContext.Provider value={{ orders }}>{children}</OrderContext.Provider>
+    <OrderContext.Provider value={{ orders, getOrder }}>
+      {children}
+    </OrderContext.Provider>
   );
 };
 

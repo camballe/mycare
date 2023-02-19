@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Text, FlatList, Pressable } from "react-native";
 import { DataStore } from "aws-amplify";
 import { Order, OrderProduct } from "../../models";
 import BasketProductItem from "../../components/BasketProductItem";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useBasketContext } from "../../contexts/BasketContext";
+import { useNavigation } from "@react-navigation/native";
 
 const Basket = () => {
+  const { pharmacy, basketProducts, basket } = useBasketContext();
   let totalPrice = pharmacy?.deliveryFee;
 
   for (let i = 0; i < basketProducts.length; i++) {
@@ -17,13 +19,11 @@ const Basket = () => {
 
   const { dbUser } = useAuthContext();
 
-  const { pharmacy, basketProducts, basket } = useBasketContext();
-
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     DataStore.query(Order, (o) => o.userID.eq(dbUser.id)).then(setOrders);
-  });
+  }, [dbUser]);
 
   const createOrder = async () => {
     // create the order
@@ -53,6 +53,13 @@ const Basket = () => {
     setOrders([...orders, newOrder]);
   };
 
+  const navigation = useNavigation();
+
+  const onCreateOrder = async () => {
+    await createOrder();
+    navigation.goBack();
+  };
+
   return (
     <View style={styles.page}>
       <Text style={styles.name}>{pharmacy?.name}</Text>
@@ -67,7 +74,7 @@ const Basket = () => {
 
       <View style={styles.separator}></View>
 
-      <Pressable onPress={createOrder} style={styles.button}>
+      <Pressable onPress={onCreateOrder} style={styles.button}>
         <Text style={styles.buttonText}>
           Create Order &#8226; KES {totalPrice.toFixed(0)}
         </Text>
